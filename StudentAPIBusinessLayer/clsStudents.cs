@@ -4,7 +4,7 @@ using StudentsDataAccess;
 
 namespace StudentsBusinessLogic
 {
-    public class clsStudent
+    public class Student
     {
         public enum enMode { AddNew = 0, Update = 1 };
         public enMode Mode = enMode.AddNew;
@@ -14,37 +14,52 @@ namespace StudentsBusinessLogic
         public int Age { get; set; }
         public decimal Grade { get; set; }
 
-        public clsStudent()
+        // Authentication-related fields
+        public string Email { get; set; }
+        public string PasswordHash { get; set; }
+        public string Role { get; set; }
+
+        public Student()
         {
             StudentID = -1;
-            FullName = "";
+            FullName = string.Empty;
             Age = 0;
             Grade = 0.0m;
+            Email = string.Empty;
+            PasswordHash = string.Empty;
+            Role = string.Empty;
             Mode = enMode.AddNew;
         }
 
-        private clsStudent(int studentID, string fullName   , int age, decimal grade)
+        private Student(int studentID, string fullName, int age, decimal grade, string email, string passwordHash, string role)
         {
             StudentID = studentID;
-            FullName = fullName ?? string.Empty; Age = age;
+            FullName = fullName ?? string.Empty;
+            Age = age;
             Grade = grade;
+            Email = email ?? string.Empty;
+            PasswordHash = passwordHash ?? string.Empty;
+            Role = role ?? string.Empty;
             Mode = enMode.Update;
         }
 
-        public static clsStudent? Find(int studentID)
+        public static Student? Find(int studentID)
         {
-            string fullName = "";
+            string fullName = string.Empty;
             int age = -1;
             decimal grade = -1;
+            string email = string.Empty;
+            string passwordHash = string.Empty;
+            string role = string.Empty;
 
-            if (clsStudentData.GetStudentByID(studentID, ref fullName, ref age, ref grade))
+            if (clsStudentData.GetStudentByID(studentID, ref fullName, ref age, ref grade, ref email, ref passwordHash, ref role))
             {
-                return new clsStudent(studentID, fullName, age, grade);
+                return new Student(studentID, fullName, age, grade, email, passwordHash, role);
             }
 
             return null;
         }
-     
+
         public static List<clsStudentDTO> GetAllStudents()
         {
             return clsStudentData.GetAllStudents();
@@ -57,13 +72,13 @@ namespace StudentsBusinessLogic
 
         private bool _AddNewStudent()
         {
-            StudentID = clsStudentData.AddNewStudent(FullName, Age, Grade);
+            StudentID = clsStudentData.AddNewStudent(FullName, Age, Grade, Email, PasswordHash, Role);
             return StudentID != -1;
         }
 
         private bool _UpdateStudent()
         {
-            return clsStudentData.UpdateStudent(StudentID, FullName, Age, Grade);
+            return clsStudentData.UpdateStudent(StudentID, FullName, Age, Grade, Email, PasswordHash, Role);
         }
 
         public bool Save()

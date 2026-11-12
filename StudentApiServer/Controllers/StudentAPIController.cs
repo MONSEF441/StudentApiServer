@@ -20,7 +20,7 @@ namespace StudentsAPI.Controllers
         }
 
         // GET: api/Students/all
-        [HttpGet("all", Name = "GetAllStudents")]
+        [HttpGet("all", Name = "GetAllStudents")]        
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -28,7 +28,7 @@ namespace StudentsAPI.Controllers
         {
             try
             {
-                List<clsStudentDTO> students = clsStudent.GetAllStudents();
+                List<clsStudentDTO> students = Student.GetAllStudents();
 
                 if (students == null || students.Count == 0)
                     return NotFound(new { message = "No students found." });
@@ -56,7 +56,7 @@ namespace StudentsAPI.Controllers
 
             try
             {
-                List<clsStudentDTO> students = clsStudent.GetPassedStudents(grade);
+                List<clsStudentDTO> students = Student.GetPassedStudents(grade);
 
                 if (students == null || students.Count == 0)
                     return NotFound(new { message = $"No passed students found with grade >= {grade}." });
@@ -84,7 +84,7 @@ namespace StudentsAPI.Controllers
 
             try
             {
-                clsStudent? student = clsStudent.Find(id);
+                Student? student = Student.Find(id);
 
                 if (student == null)
                     return NotFound(new { message = $"Student with ID {id} was not found." });
@@ -104,7 +104,7 @@ namespace StudentsAPI.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public IActionResult AddStudent([FromBody] clsStudent newStudent)
+        public IActionResult AddStudent([FromBody] Student newStudent)
         {
             if (newStudent == null)
                 return BadRequest(new { message = "Student data is null." });
@@ -117,14 +117,27 @@ namespace StudentsAPI.Controllers
 
             if (newStudent.Grade < 0 || newStudent.Grade > 100)
                 return BadRequest(new { message = "Invalid grade. Grade must be between 0 and 100." });
+            if (string.IsNullOrWhiteSpace(newStudent.Email))
+                return BadRequest(new { message = "Email cannot be empty." });
 
+            if (string.IsNullOrWhiteSpace(newStudent.PasswordHash))
+                return BadRequest(new { message = "PasswordHash cannot be empty." });
+
+            if (string.IsNullOrWhiteSpace(newStudent.Role))
+                return BadRequest(new { message = "Role cannot be empty." });
+
+       
+            
             try
             {
-                clsStudent student = new clsStudent
+                Student student = new Student
                 {
                     FullName = newStudent.FullName.Trim(),
                     Age = newStudent.Age,
-                    Grade = newStudent.Grade
+                    Grade = newStudent.Grade,
+                    Email = newStudent.Email.Trim(),
+                    PasswordHash = newStudent.PasswordHash.Trim(),
+                    Role = newStudent.Role.Trim()
                 };
 
                 if (student.Save())
@@ -149,7 +162,7 @@ namespace StudentsAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public IActionResult UpdateStudent(int id, [FromBody] clsStudent updatedStudent)
+        public IActionResult UpdateStudent(int id, [FromBody] Student updatedStudent)
         {
             if (id <= 0)
                 return BadRequest(new { message = $"Invalid ID: {id}." });
@@ -165,10 +178,19 @@ namespace StudentsAPI.Controllers
 
             if (updatedStudent.Grade < 0 || updatedStudent.Grade > 100)
                 return BadRequest(new { message = "Invalid grade. Grade must be between 0 and 100." });
+            if (string.IsNullOrWhiteSpace(updatedStudent.Email))
+                return BadRequest(new { message = "Email cannot be empty." });
 
+            if (string.IsNullOrWhiteSpace(updatedStudent.PasswordHash))
+                return BadRequest(new { message = "PasswordHash cannot be empty." });
+
+            if (string.IsNullOrWhiteSpace(updatedStudent.Role))
+                return BadRequest(new { message = "Role cannot be empty." });
+
+           
             try
             {
-                clsStudent? student = clsStudent.Find(id);
+                Student? student = Student.Find(id);
 
                 if (student == null)
                     return NotFound(new { message = $"Student with ID {id} was not found." });
@@ -176,6 +198,12 @@ namespace StudentsAPI.Controllers
                 student.FullName = updatedStudent.FullName.Trim();
                 student.Age = updatedStudent.Age;
                 student.Grade = updatedStudent.Grade;
+                student.FullName = updatedStudent.FullName.Trim();
+                student.Age = updatedStudent.Age;
+                student.Grade = updatedStudent.Grade;
+                student.Email = updatedStudent.Email.Trim();
+                student.PasswordHash = updatedStudent.PasswordHash.Trim();
+                student.Role = updatedStudent.Role.Trim();
 
                 if (student.Save())
                     return Ok(student);
@@ -204,11 +232,11 @@ namespace StudentsAPI.Controllers
 
             try
             {
-                clsStudent? student = clsStudent.Find(id);
+                Student? student = Student.Find(id);
                 if (student == null)
                     return NotFound(new { message = $"Student with ID {id} was not found." });
 
-                if (clsStudent.Delete(id))
+                if (Student.Delete(id))
                     return Ok(new { message = $"Student with ID {id} has been deleted successfully." });
 
                 return StatusCode(StatusCodes.Status500InternalServerError,
