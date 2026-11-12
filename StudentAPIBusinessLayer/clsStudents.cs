@@ -72,12 +72,14 @@ namespace StudentsBusinessLogic
 
         private bool _AddNewStudent()
         {
+            _EnsurePasswordHashed();
             StudentID = clsStudentData.AddNewStudent(FullName, Age, Grade, Email, PasswordHash, Role);
             return StudentID != -1;
         }
 
         private bool _UpdateStudent()
         {
+            _EnsurePasswordHashed();
             return clsStudentData.UpdateStudent(StudentID, FullName, Age, Grade, Email, PasswordHash, Role);
         }
 
@@ -104,5 +106,23 @@ namespace StudentsBusinessLogic
         {
             return clsStudentData.DeleteStudent(studentID);
         }
+        private static bool _IsBcryptHash(string value)
+        {
+            return !string.IsNullOrWhiteSpace(value) &&
+                   (value.StartsWith("$2a$") || value.StartsWith("$2b$") || value.StartsWith("$2y$"));
+        }
+
+        private void _EnsurePasswordHashed()
+        {
+            if (string.IsNullOrWhiteSpace(PasswordHash))
+                return;
+
+            PasswordHash = PasswordHash.Trim();
+
+            if (!_IsBcryptHash(PasswordHash))
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(PasswordHash);
+        }
+
+       
     }
 }

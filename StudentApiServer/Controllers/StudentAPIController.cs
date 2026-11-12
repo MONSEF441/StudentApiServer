@@ -19,6 +19,9 @@ namespace StudentsAPI.Controllers
             _logger = logger;
         }
 
+     
+        
+        
         // GET: api/Students/all
         [HttpGet("all", Name = "GetAllStudents")]        
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -43,6 +46,9 @@ namespace StudentsAPI.Controllers
             }
         }
 
+      
+        
+        
         // GET: api/Students/passed?grade=50
         [HttpGet("passed", Name = "GetPassedStudents")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -71,6 +77,9 @@ namespace StudentsAPI.Controllers
             }
         }
 
+      
+        
+        
         // GET: api/Students/{id}
         [HttpGet("{id:int}", Name = "GetStudentById")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -99,6 +108,9 @@ namespace StudentsAPI.Controllers
             }
         }
 
+      
+        
+        
         // POST: api/Students
         [HttpPost(Name = "AddStudent")]
         [ProducesResponseType(StatusCodes.Status201Created)]
@@ -156,6 +168,9 @@ namespace StudentsAPI.Controllers
             }
         }
 
+      
+        
+        
         // PUT: api/Students/{id}
         [HttpPut("{id:int}", Name = "UpdateStudent")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -195,9 +210,7 @@ namespace StudentsAPI.Controllers
                 if (student == null)
                     return NotFound(new { message = $"Student with ID {id} was not found." });
 
-                student.FullName = updatedStudent.FullName.Trim();
-                student.Age = updatedStudent.Age;
-                student.Grade = updatedStudent.Grade;
+
                 student.FullName = updatedStudent.FullName.Trim();
                 student.Age = updatedStudent.Age;
                 student.Grade = updatedStudent.Grade;
@@ -219,6 +232,10 @@ namespace StudentsAPI.Controllers
             }
         }
 
+       
+        
+        
+        
         // DELETE: api/Students/{id}
         [HttpDelete("{id:int}", Name = "DeleteStudent")]
         [ProducesResponseType(StatusCodes.Status200OK)]
