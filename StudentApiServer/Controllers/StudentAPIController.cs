@@ -1,13 +1,16 @@
-using System;
-using System.Collections.Generic;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using StudentsBusinessLogic;
-using StudentsDataAccess;
-
-namespace StudentsAPI.Controllers
+using StudentApi.Data;
+using StudentApi.Models;
+using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+namespace StudentApi.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/Students")]
     public class StudentsController : ControllerBase
@@ -19,19 +22,15 @@ namespace StudentsAPI.Controllers
             _logger = logger;
         }
 
-     
-        
-        
+
         // GET: api/Students/all
-        [HttpGet("all", Name = "GetAllStudents")]        
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [Authorize(Roles = "Admin")]
+        [HttpGet("all", Name = "GetAllStudents")]
         public IActionResult GetAllStudents()
         {
             try
             {
-                List<clsStudentDTO> students = Student.GetAllStudents();
+                List<clsStudentDTO> students = Student.GetAllStudents(); ;
 
                 if (students == null || students.Count == 0)
                     return NotFound(new { message = "No students found." });
@@ -46,15 +45,10 @@ namespace StudentsAPI.Controllers
             }
         }
 
-      
-        
-        
+
         // GET: api/Students/passed?grade=50
         [HttpGet("passed", Name = "GetPassedStudents")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [AllowAnonymous]
         public IActionResult GetPassedStudents([FromQuery] decimal grade = 50.0m)
         {
             if (grade < 0 || grade > 100)
@@ -77,19 +71,15 @@ namespace StudentsAPI.Controllers
             }
         }
 
-      
-        
-        
+
         // GET: api/Students/{id}
         [HttpGet("{id:int}", Name = "GetStudentById")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult GetStudentById(int id)
         {
-            if (id <= 0)
-                return BadRequest(new { message = $"Invalid ID: {id}. Student ID must be greater than 0." });
+            if (id < 1)
+            {
+                return BadRequest($"Not accepted ID {id}");
+            }
 
             try
             {
@@ -97,6 +87,17 @@ namespace StudentsAPI.Controllers
 
                 if (student == null)
                     return NotFound(new { message = $"Student with ID {id} was not found." });
+
+
+
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ;
+                var userRole = User.FindFirstValue(ClaimTypes.Role);
+                int authenticatedStudentId = int.Parse(userId ?? "-1");
+                bool isAdmin = userRole == "Admin";
+
+                if (!isAdmin && authenticatedStudentId != id)
+                    return Forbid();
+
 
                 return Ok(student);
             }
@@ -108,14 +109,10 @@ namespace StudentsAPI.Controllers
             }
         }
 
-      
-        
-        
+
+        [Authorize(Roles = "Admin")]
         // POST: api/Students
         [HttpPost(Name = "AddStudent")]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult AddStudent([FromBody] Student newStudent)
         {
             if (newStudent == null)
@@ -168,15 +165,10 @@ namespace StudentsAPI.Controllers
             }
         }
 
-      
-        
-        
+
+        [Authorize(Roles = "Admin")]
         // PUT: api/Students/{id}
         [HttpPut("{id:int}", Name = "UpdateStudent")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult UpdateStudent(int id, [FromBody] Student updatedStudent)
         {
             if (id <= 0)
@@ -232,16 +224,10 @@ namespace StudentsAPI.Controllers
             }
         }
 
-       
-        
-        
-        
+
+        [Authorize(Roles = "Admin")]
         // DELETE: api/Students/{id}
         [HttpDelete("{id:int}", Name = "DeleteStudent")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult DeleteStudent(int id)
         {
             if (id <= 0)
@@ -266,5 +252,7 @@ namespace StudentsAPI.Controllers
                     new { message = ex.Message });
             }
         }
+
+
     }
 }

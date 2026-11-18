@@ -1,71 +1,89 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using System.Reflection.Metadata;
+using System.Text;
 
-/// Using Swagger for API reference generation
+
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+
+// ===============================
+// JWT Authentication Configuration
+// ===============================
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            
+            ValidIssuer = "StudentApi",
+            ValidAudience = "StudentApiUsers",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("THIS_IS_A_VERY_SECRET_KEY_123456"))
+        };
+    });
+
+ 
+// ===============================
+// Authorization Configuration
+// ===============================
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+
+// ===============================
+// Swagger Configuration
+// ===============================
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddCors(options =>
+builder.Services.AddSwaggerGen(options =>
 {
-    options.AddPolicy("StudentApiCorsPolicy", policy =>
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-         policy
-              .WithOrigins("http://localhost:7217" , "https://localhost:5215")
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",       // lowercase per RFC 7235
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT token."
+    });
+
+    options.AddSecurityRequirement(document =>
+    {
+        var schemeRef = new OpenApiSecuritySchemeReference("Bearer", document);
+        return new OpenApiSecurityRequirement
+        {
+            [schemeRef] = []
+        };
     });
 });
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
-app.UseHttpsRedirection();
+    // ===============================
+    // HTTP Request Pipeline
+    // ===============================
 
-app.UseCors("StudentApiCorsPolicy");
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
 
-app.UseAuthorization();
+    app.UseHttpsRedirection();
 
-app.MapControllers();
+    app.UseAuthentication();
+    app.UseAuthorization();
 
-app.Run();
+    app.MapControllers();
 
+    app.Run();
 
-
-
-///// Using OpenAI and Scalar for API reference generation
-/*
-using Microsoft.AspNetCore.OpenApi;
-using Scalar.AspNetCore; 
-
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-builder.Services.AddControllers();
-builder.Services.AddOpenApi(); // Generates native OpenAPI metadata
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();            
-    app.MapScalarApiReference();   
-}
-
-app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
-
-app.Run();
-
-*/

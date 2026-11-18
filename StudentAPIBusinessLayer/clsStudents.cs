@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using StudentsDataAccess;
+using StudentApi.Data;
 
-namespace StudentsBusinessLogic
+namespace StudentApi.Models
 {
     public class Student
     {

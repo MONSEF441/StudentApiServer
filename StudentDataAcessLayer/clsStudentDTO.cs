@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Microsoft.Data.SqlClient;
+using System;
 using System.Collections.Generic;
 using System.Data;
-using Microsoft.Data.SqlClient;
+using System.Text.Json.Serialization;
 
-namespace StudentsDataAccess
+namespace StudentApi.Data
 {
     public class clsStudentDTO
     {
@@ -14,6 +15,8 @@ namespace StudentsDataAccess
 
         // Authentication-related fields
         public string Email { get; set; }
+
+        [JsonIgnore]
         public string PasswordHash { get; set; }
         public string Role { get; set; }
 
@@ -56,6 +59,8 @@ namespace StudentsDataAccess
                             reader["Email"]?.ToString() ?? string.Empty,
                             reader["PasswordHash"]?.ToString() ?? string.Empty,
                             reader["Role"]?.ToString() ?? string.Empty
+
+
                         ));
                     }
                 }
