@@ -13,11 +13,11 @@ namespace StudentApi.Controllers
     [Authorize]
     [ApiController]
     [Route("api/Students")]
-    public class StudentsController : ControllerBase
+    public class StudentAPIController : ControllerBase
     {
-        private readonly ILogger<StudentsController> _logger;
+        private readonly ILogger<StudentAPIController> _logger;
 
-        public StudentsController(ILogger<StudentsController> logger)
+        public StudentAPIController(ILogger<StudentAPIController> logger)
         {
             _logger = logger;
         }
@@ -72,34 +72,27 @@ namespace StudentApi.Controllers
         }
 
 
-        // GET: api/Students/{id}
-        [HttpGet("{id:int}", Name = "GetStudentById")]
-        public IActionResult GetStudentById(int id)
+        [HttpGet("{id}", Name = "GetStudentById")]
+        public async Task<ActionResult<Student>> GetStudentById( int id , [FromServices] IAuthorizationService authorizationService)
         {
             if (id < 1)
-            {
-                return BadRequest($"Not accepted ID {id}");
-            }
+                return BadRequest("Invalid student id.");
 
             try
             {
                 Student? student = Student.Find(id);
 
+
                 if (student == null)
-                    return NotFound(new { message = $"Student with ID {id} was not found." });
+                    return NotFound("Student not found.");
 
+                var authResult = await authorizationService.AuthorizeAsync(User, id, "StudentOwnerOrAdmin");
 
-
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ;
-                var userRole = User.FindFirstValue(ClaimTypes.Role);
-                int authenticatedStudentId = int.Parse(userId ?? "-1");
-                bool isAdmin = userRole == "Admin";
-
-                if (!isAdmin && authenticatedStudentId != id)
+                if (!authResult.Succeeded)
                     return Forbid();
 
-
                 return Ok(student);
+
             }
             catch (Exception ex)
             {
@@ -108,7 +101,6 @@ namespace StudentApi.Controllers
                     new { message = ex.Message });
             }
         }
-
 
         [Authorize(Roles = "Admin")]
         // POST: api/Students
